@@ -1,8 +1,9 @@
 from mss.windows import MSS as mss
 from PIL import Image
 import base64
-import requests
 from datetime import datetime
+import asyncio
+import aiohttp
 
 def take_screenshot():
     with mss() as sct:
@@ -18,32 +19,32 @@ def make_data_string(filename):
         image = fin.read()
     return f"data:image/png;base64,{base64.b64encode(image).decode("utf-8")}"
 
-def chat(image_data_string):
-    response = requests.post(
-        "http://127.0.0.1:1234/v1/chat/completions",
-        headers={"Content-Type": "application/json"},
-        json={
-            "model": "minicpm-v-2_6",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "This is a screenshot. What is this user doing?"
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": image_data_string}
-                        }
-                    ]
-                }
-            ],
-            "stream": False
-        }
-    ).json()
-
-    return response["choices"][0]["message"]["content"]
+async def chat(image_data_string):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            "http://127.0.0.1:1234/v1/chat/completions",
+            headers={"Content-Type": "application/json"},
+            json={
+                "model": "minicpm-v-2_6",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "This is a screenshot. What is this user doing?"
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": image_data_string}
+                            }
+                        ]
+                    }
+                ],
+                "stream": False
+            }
+        ) as response:
+            return await response.json()
 
 def write_history(text):
     with open("history.txt", 'a', encoding="UTF-8") as fout:
@@ -54,10 +55,9 @@ def main():
     screenshot = resize_image(take_screenshot(), 540)
     image_path = f"screenshots/{shot_time}.png"
     screenshot.save(image_path)
-    description = f"{shot_time}\n{chat(make_data_string(image_path))}\n\n"
+    description = f"{shot_time}\n{asyncio.run(chat(make_data_string(image_path)))["choices"][0]["message"]["content"]}\n\n"
     print(description)
     write_history(description)
-
 
 if __name__ == "__main__":
     try:
