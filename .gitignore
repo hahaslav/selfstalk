@@ -1,8 +1,11 @@
+# Saved data
+screenshots/
+
 # Python virtual environment
-venv
+venv/
 
 # Python compiled bytecode
-__pycache__
+__pycache__/
 
 # PyCharm/IntelliJ Idea specific
 .idea/
