@@ -49,7 +49,7 @@ def write_history(text):
     with open("history.txt", 'a', encoding="UTF-8") as fout:
         fout.write(text)
 
-if __name__ == '__main__':
+def main():
     shot_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     screenshot = resize_image(take_screenshot(), 540)
     image_path = f"screenshots/{shot_time}.png"
@@ -57,3 +57,11 @@ if __name__ == '__main__':
     description = f"{shot_time}\n{chat(make_data_string(image_path))}\n\n"
     print(description)
     write_history(description)
+
+
+if __name__ == "__main__":
+    try:
+        while True:
+            main()
+    except KeyboardInterrupt:
+        print("The logging is now stopped. The last screenshot was saved without its corresponding description. But the LLM continues to work.")
