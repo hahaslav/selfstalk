@@ -2,6 +2,7 @@ from mss.windows import MSS as mss
 from PIL import Image
 import base64
 import requests
+from datetime import datetime
 
 def take_screenshot():
     with mss() as sct:
@@ -12,8 +13,8 @@ def resize_image(image, new_height):
     new_width = new_height * image.width // image.height
     return image.resize((new_width, new_height), Image.Resampling.BOX)
 
-def make_data_string():
-    with open("screenshots/1.png", 'rb') as fin:
+def make_data_string(filename):
+    with open(filename, 'rb') as fin:
         image = fin.read()
     return f"data:image/png;base64,{base64.b64encode(image).decode("utf-8")}"
 
@@ -45,6 +46,8 @@ def chat(image_data_string):
     return response["choices"][0]["message"]["content"]
 
 if __name__ == '__main__':
+    shot_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     screenshot = resize_image(take_screenshot(), 540)
-    screenshot.save("screenshots/1.png")
-    print(chat(make_data_string()))
+    image_path = f"screenshots/{shot_time}.png"
+    screenshot.save(image_path)
+    print(chat(make_data_string(image_path)))
