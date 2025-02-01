@@ -4,6 +4,10 @@ import base64
 from datetime import datetime
 import asyncio
 import aiohttp
+import os
+
+LMS_SERVER = "http://127.0.0.1:1234"
+LLM = "minicpm-v-2_6"
 
 def take_screenshot():
     with mss() as sct:
@@ -22,10 +26,10 @@ def make_data_string(filename):
 async def chat(image_data_string):
     async with aiohttp.ClientSession() as session:
         async with session.post(
-            "http://127.0.0.1:1234/v1/chat/completions",
+            f"{LMS_SERVER}/v1/chat/completions",
             headers={"Content-Type": "application/json"},
             json={
-                "model": "minicpm-v-2_6",
+                "model": LLM,
                 "messages": [
                     {
                         "role": "user",
@@ -53,6 +57,8 @@ def write_history(text):
 def main():
     shot_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     screenshot = resize_image(take_screenshot(), 540)
+    if not os.path.exists("screenshots"):
+        os.mkdir("screenshots")
     image_path = f"screenshots/{shot_time}.png"
     screenshot.save(image_path)
     description = f"{shot_time}\n{asyncio.run(chat(make_data_string(image_path)))["choices"][0]["message"]["content"]}\n\n"
