@@ -50,24 +50,28 @@ async def chat(image_data_string):
         ) as response:
             return await response.json()
 
-def write_history(text):
-    with open("history.txt", 'a', encoding="UTF-8") as fout:
+def write_history(text, history_path):
+    with open(history_path, 'a', encoding="UTF-8") as fout:
         fout.write(text)
 
-def main():
+def main(history_time):
     shot_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     screenshot = resize_image(take_screenshot(), 540)
     if not os.path.exists("screenshots"):
         os.mkdir("screenshots")
+    if not os.path.exists("history"):
+        os.mkdir("history")
     image_path = f"screenshots/{shot_time}.png"
+    history_path = f"history/{history_time}.txt"
     screenshot.save(image_path)
     description = f"{shot_time}\n{asyncio.run(chat(make_data_string(image_path)))["choices"][0]["message"]["content"]}\n\n"
     print(description)
-    write_history(description)
+    write_history(description, history_path)
 
 if __name__ == "__main__":
+    history_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     try:
         while True:
-            main()
+            main(history_time)
     except KeyboardInterrupt:
         print("The logging is now stopped. The last screenshot was saved without its corresponding description. But the LLM continues to work.")
